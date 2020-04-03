@@ -12,7 +12,7 @@ from .testcases import LocustTestCase, WebserverTestCase
 class TestOldWaitApi(LocustTestCase):
     def setUp(self):
         super(TestOldWaitApi, self).setUp()
-    
+
     def test_wait_function(self):
         with warnings.catch_warnings(record=True) as w:
             class User(Locust):
@@ -24,7 +24,7 @@ class TestOldWaitApi(LocustTestCase):
             self.assertEqual(1, len(w))
             self.assertTrue(issubclass(w[0].category, DeprecationWarning))
             self.assertIn("wait_function", str(w[0].message))
-    
+
     def test_wait_function_on_taskset(self):
         with warnings.catch_warnings(record=True) as w:
             class User(Locust):
@@ -36,7 +36,7 @@ class TestOldWaitApi(LocustTestCase):
             self.assertEqual(1, len(w))
             self.assertTrue(issubclass(w[0].category, DeprecationWarning))
             self.assertIn("wait_function", str(w[0].message))
-    
+
     def test_min_max_wait(self):
         with warnings.catch_warnings(record=True) as w:
             class User(Locust):
@@ -52,7 +52,7 @@ class TestOldWaitApi(LocustTestCase):
             self.assertTrue(issubclass(w[0].category, DeprecationWarning))
             self.assertIn("min_wait", str(w[0].message))
             self.assertIn("max_wait", str(w[0].message))
-    
+
     def test_zero_min_max_wait(self):
         return
         with warnings.catch_warnings(record=True) as w:
@@ -69,7 +69,7 @@ class TestOldWaitApi(LocustTestCase):
             self.assertTrue(issubclass(w[0].category, DeprecationWarning))
             self.assertIn("min_wait", str(w[0].message))
             self.assertIn("max_wait", str(w[0].message))
-    
+
     def test_min_max_wait_combined_with_wait_time(self):
         with warnings.catch_warnings(record=True) as w:
             class User(Locust):
@@ -86,14 +86,14 @@ class TestOldWaitApi(LocustTestCase):
             self.assertTrue(issubclass(w[0].category, DeprecationWarning))
             self.assertIn("min_wait", str(w[0].message))
             self.assertIn("max_wait", str(w[0].message))
-    
+
     def test_min_max_wait_on_taskset(self):
         with warnings.catch_warnings(record=True) as w:
             class User(Locust):
                 wait_time = constant(3)
             class TS(TaskSet):
                 min_wait = 1000
-                max_wait = 1000                
+                max_wait = 1000
                 @task
                 def t(self):
                     pass
@@ -103,4 +103,4 @@ class TestOldWaitApi(LocustTestCase):
             self.assertTrue(issubclass(w[0].category, DeprecationWarning))
             self.assertIn("min_wait", str(w[0].message))
             self.assertIn("max_wait", str(w[0].message))
-        
+

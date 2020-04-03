@@ -16,7 +16,7 @@ class TestWaitTime(LocustTestCase):
             pass
         class TaskSet2(TaskSet):
             wait_time = between(20.0, 21.0)
-        
+
         u = User()
         ts1 = TaskSet1(u)
         ts2 = TaskSet2(u)
@@ -31,7 +31,7 @@ class TestWaitTime(LocustTestCase):
             w = ts2.wait_time()
             self.assertGreaterEqual(w, 20)
             self.assertLessEqual(w, 21)
-    
+
     def test_constant(self):
         class User(Locust):
             wait_time = constant(13)
@@ -39,7 +39,7 @@ class TestWaitTime(LocustTestCase):
             pass
         self.assertEqual(13, User().wait_time())
         self.assertEqual(13, TaskSet1(User()).wait_time())
-    
+
     def test_constant_zero(self):
         class User(Locust):
             wait_time = constant(0)
@@ -50,16 +50,16 @@ class TestWaitTime(LocustTestCase):
         start_time = time.time()
         TaskSet1(User()).wait()
         self.assertLess(time.time() - start_time, 0.002)
-    
+
     def test_constant_pacing(self):
         class User(Locust):
             wait_time = constant_pacing(0.1)
         class TS(TaskSet):
             pass
         ts = TS(User())
-        
-        ts2 = TS(User())      
-        
+
+        ts2 = TS(User())
+
         previous_time = time.time()
         for i in range(7):
             ts.wait()

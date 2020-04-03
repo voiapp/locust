@@ -52,7 +52,7 @@ class LocustRunner(object):
                 logger.info("Resetting stats\n")
                 self.stats.reset_all()
         events.hatch_complete += on_hatch_complete
-    
+
     def __del__(self):
         # don't leave any stray greenlets if runner is removed
         if len(self.greenlet) > 0:
@@ -61,11 +61,11 @@ class LocustRunner(object):
     @property
     def request_stats(self):
         return self.stats.entries
-    
+
     @property
     def errors(self):
         return self.stats.errors
-    
+
     @property
     def user_count(self):
         return len(self.locusts)
@@ -119,17 +119,17 @@ class LocustRunner(object):
         spawn_count = len(bucket)
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.state = STATE_HATCHING
-        
+
         existing_count = len(self.locusts)
         logger.info("Hatching and swarming %i users at the rate %g users/s (%i users already running)..." % (spawn_count, self.hatch_rate, existing_count))
         occurrence_count = dict([(l.__name__, 0) for l in self.locust_classes])
-        
+
         def hatch():
             sleep_time = 1.0 / self.hatch_rate
             while True:
                 if not bucket:
                     logger.info("All locusts hatched: %s (%i already running)" % (
-                        ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]), 
+                        ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]),
                         existing_count,
                     ))
                     events.hatch_complete.fire(user_count=len(self.locusts))
@@ -148,7 +148,7 @@ class LocustRunner(object):
                     logger.debug("%i locusts hatched" % len(self.locusts))
                 if bucket:
                     gevent.sleep(sleep_time)
-        
+
         hatch()
         if wait:
             self.locusts.join()
@@ -170,10 +170,10 @@ class LocustRunner(object):
                     break
         self.kill_locust_greenlets(dying)
         events.hatch_complete.fire(user_count=self.user_count)
-    
+
     def kill_locust_greenlets(self, greenlets):
         """
-        Kill running locust greenlets. If options.stop_timeout is set, we try to stop the 
+        Kill running locust greenlets. If options.stop_timeout is set, we try to stop the
         Locust users gracefully
         """
         if self.options.stop_timeout:
@@ -191,7 +191,7 @@ class LocustRunner(object):
         else:
             for g in greenlets:
                 self.locusts.killone(g)
-        
+
     def monitor_cpu(self):
         process = psutil.Process()
         while True:
@@ -235,7 +235,7 @@ class LocustRunner(object):
         self.hatch_rate = hatch_rate
         self.step_clients_growth = step_locust_count
         self.step_duration = step_duration
-        
+
         if self.stepload_greenlet:
             logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
             self.stepload_greenlet.kill()
@@ -262,7 +262,7 @@ class LocustRunner(object):
         self.kill_locust_greenlets([g for g in self.locusts])
         self.state = STATE_STOPPED
         events.locust_stop_hatching.fire()
-    
+
     def quit(self):
         self.stop()
         self.greenlet.kill(block=True)
@@ -325,7 +325,7 @@ class MasterLocustRunner(DistributedLocustRunner):
         class SlaveNodesDict(dict):
             def get_by_state(self, state):
                 return [c for c in self.values() if c.state == state]
-            
+
             @property
             def all(self):
                 return self.values()
@@ -333,15 +333,15 @@ class MasterLocustRunner(DistributedLocustRunner):
             @property
             def ready(self):
                 return self.get_by_state(STATE_INIT)
-            
+
             @property
             def hatching(self):
                 return self.get_by_state(STATE_HATCHING)
-            
+
             @property
             def running(self):
                 return self.get_by_state(STATE_RUNNING)
-        
+
         self.clients = SlaveNodesDict()
         self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
         self.greenlet.spawn(self.heartbeat_worker).link_exception(callback=self.noop)
@@ -355,16 +355,16 @@ class MasterLocustRunner(DistributedLocustRunner):
 
             self.clients[client_id].user_count = data["user_count"]
         events.slave_report += on_slave_report
-        
+
         # register listener that sends quit message to slave nodes
         def on_quitting():
             self.quit()
         events.quitting += on_quitting
-    
+
     @property
     def user_count(self):
         return sum([c.user_count for c in self.clients.values()])
-    
+
     def cpu_log_warning(self):
         warning_emitted = LocustRunner.cpu_log_warning(self)
         if self.slave_cpu_warning_emitted:
@@ -394,7 +394,7 @@ class MasterLocustRunner(DistributedLocustRunner):
             self.stats.clear_all()
             self.exceptions = {}
             events.master_start_hatching.fire()
-        
+
         for client in (self.clients.ready + self.clients.running + self.clients.hatching):
             data = {
                 "hatch_rate": slave_hatch_rate,
@@ -408,7 +408,7 @@ class MasterLocustRunner(DistributedLocustRunner):
                 remaining -= 1
 
             self.server.send_to_client(Message("hatch", data, client.id))
-        
+
         self.state = STATE_HATCHING
 
     def stop(self):
@@ -416,13 +416,13 @@ class MasterLocustRunner(DistributedLocustRunner):
         for client in self.clients.all:
             self.server.send_to_client(Message("stop", None, client.id))
         events.master_stop_hatching.fire()
-    
+
     def quit(self):
         for client in self.clients.all:
             self.server.send_to_client(Message("quit", None, client.id))
         gevent.sleep(0.5) # wait for final stats report from all slaves
         self.greenlet.kill(block=True)
-    
+
     def heartbeat_worker(self):
         while True:
             gevent.sleep(self.heartbeat_interval)
@@ -489,25 +489,25 @@ class SlaveLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(SlaveLocustRunner, self).__init__(*args, **kwargs)
         self.client_id = socket.gethostname() + "_" + uuid4().hex
-        
+
         self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
         self.greenlet.spawn(self.heartbeat).link_exception(callback=self.noop)
         self.greenlet.spawn(self.worker).link_exception(callback=self.noop)
         self.client.send(Message("client_ready", None, self.client_id))
         self.slave_state = STATE_INIT
         self.greenlet.spawn(self.stats_reporter).link_exception(callback=self.noop)
-        
+
         # register listener for when all locust users have hatched, and report it to the master node
         def on_hatch_complete(user_count):
             self.client.send(Message("hatch_complete", {"count":user_count}, self.client_id))
             self.slave_state = STATE_RUNNING
         events.hatch_complete += on_hatch_complete
-        
-        # register listener that adds the current number of spawned locusts to the report that is sent to the master node 
+
+        # register listener that adds the current number of spawned locusts to the report that is sent to the master node
         def on_report_to_master(client_id, data):
             data["user_count"] = self.user_count
         events.report_to_master += on_report_to_master
-        
+
         # register listener that sends quit message to master
         def on_quitting():
             self.client.send(Message("quit", None, self.client_id))
@@ -556,7 +556,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
             except:
                 logger.error("Connection lost to master server. Aborting...")
                 break
-            
+
             gevent.sleep(SLAVE_REPORT_INTERVAL)
 
     def _send_stats(self):

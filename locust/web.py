@@ -44,7 +44,7 @@ def index():
         slave_count = runners.locust_runner.slave_count
     else:
         slave_count = 0
-    
+
     override_host_warning = False
     if runners.locust_runner.host:
         host = runners.locust_runner.host
@@ -59,7 +59,7 @@ def index():
             host = None
     else:
         host = None
-    
+
     is_step_load = runners.locust_runner.step_load
 
     return render_template("index.html",
@@ -80,14 +80,14 @@ def swarm():
     locust_count = int(request.form["locust_count"])
     hatch_rate = float(request.form["hatch_rate"])
     if (request.form.get("host")):
-        runners.locust_runner.host = str(request.form["host"]) 
+        runners.locust_runner.host = str(request.form["host"])
 
     if is_step_load:
         step_locust_count = int(request.form["step_locust_count"])
         step_duration = parse_timespan(str(request.form["step_duration"]))
         runners.locust_runner.start_stepload(locust_count, hatch_rate, step_locust_count, step_duration)
         return jsonify({'success': True, 'message': 'Swarming started in Step Load Mode', 'host': runners.locust_runner.host})
-    
+
     runners.locust_runner.start_hatching(locust_count, hatch_rate)
     return jsonify({'success': True, 'message': 'Swarming started', 'host': runners.locust_runner.host})
 
@@ -101,7 +101,7 @@ def reset_stats():
     runners.locust_runner.stats.reset_all()
     runners.locust_runner.exceptions = {}
     return "ok"
-    
+
 @app.route("/stats/requests/csv")
 def request_stats_csv():
     response = make_response(requests_csv())
@@ -164,7 +164,7 @@ def request_stats():
         report["fail_ratio"] = runners.locust_runner.stats.total.fail_ratio
         report["current_response_time_percentile_95"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.95)
         report["current_response_time_percentile_50"] = runners.locust_runner.stats.total.get_current_response_time_percentile(0.5)
-    
+
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
         slaves = []
@@ -172,7 +172,7 @@ def request_stats():
             slaves.append({"id":slave.id, "state":slave.state, "user_count": slave.user_count, "cpu_usage":slave.cpu_usage})
 
         report["slaves"] = slaves
-    
+
     report["state"] = runners.locust_runner.state
     report["user_count"] = runners.locust_runner.user_count
 
@@ -199,7 +199,7 @@ def exceptions_csv():
     for exc in runners.locust_runner.exceptions.values():
         nodes = ", ".join(exc["nodes"])
         writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
-    
+
     data.seek(0)
     response = make_response(data.read())
     file_name = "exceptions_{0}.csv".format(time())

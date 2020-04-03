@@ -12,8 +12,8 @@ def check_for_deprecated_wait_api(locust_or_taskset):
                       "(should return seconds and not milliseconds)" % type(locust_or_taskset).__name__, DeprecationWarning)
         from locust.core import TaskSet
         if not locust_or_taskset.wait_time or locust_or_taskset.wait_time.__func__ == TaskSet.wait_time:
-            # If wait_function has been declared, and custom wait_time has NOT been declared, 
-            # we'll add a wait_time function that just calls wait_function and divides the 
+            # If wait_function has been declared, and custom wait_time has NOT been declared,
+            # we'll add a wait_time function that just calls wait_function and divides the
             # returned value by 1000.0
             locust_or_taskset.wait_time = lambda: locust_or_taskset.wait_function() / 1000.0
     if locust_or_taskset.min_wait is not None and locust_or_taskset.max_wait is not None:
