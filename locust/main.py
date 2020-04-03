@@ -460,9 +460,9 @@ def main():
         sys.exit(0)
     
     if options.run_time:
-        if not options.no_web:
-            logger.error("The --run-time argument can only be used together with --no-web")
-            sys.exit(1)
+        # if not options.no_web:
+        #     logger.error("The --run-time argument can only be used together with --no-web")
+        #     sys.exit(1)
         if options.slave:
             logger.error("--run-time should be specified on the master node, and not on slave nodes")
             sys.exit(1)
@@ -504,7 +504,7 @@ def main():
     # main_greenlet is pointing to runners.locust_runner.greenlet by default, it will point the web greenlet later if in web mode
     main_greenlet = runners.locust_runner.greenlet
 
-    if options.no_web:
+    if options.no_web or options.run_time:
         if options.master:
             while len(runners.locust_runner.clients.ready) < options.expect_slaves:
                 logging.info("Waiting for slaves to be ready, %s of %s connected",
